@@ -1,0 +1,37 @@
+﻿services:
+  fishward:
+    image: fishward
+    depends_on:
+      postgres:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: Fishward/Dockerfile
+    restart: unless-stopped
+    networks:
+      - fishward
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: "${DB_User}"
+      POSTGRES_PASSWORD: "${DB_Password}"
+      POSTGRES_DB: "${DB_DatabaseName}"
+      TZ: Europe/Warsaw
+    ports:
+      - "${DB_Port}:5432"
+    volumes:
+      - "${DB_Data}:/var/lib/postgresql/18/data"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_User} -d ${DB_DatabaseName}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    hostname: $"{DB_Hostname}"
+    restart: unless-stopped
+    networks:
+      - fishward
+        
+networks:
+  fishward:
